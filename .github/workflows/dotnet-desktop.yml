@@ -1,52 +1,29 @@
-name: "Publish"
-
+name: CI Build
 on:
   push:
-    tags:
-      - "v*"
-
-env:
-  PROJECT_PATH: src/3H54N/Abdal-Net-Fixer/blob/master/Abdal%20Security%20Group%20App/Abdal%20Net%20Fixer.csproj
-  ZIP_PATH: src/3H54N/Abdal-Net-Fixer/bin/Release/net5.0-windows/win-x86/publish/Abdal-Net-Fixer-x86.zip
-  EXE_PATH: src/3H54N/Abdal-Net-Fixer/bin/Release/net5.0-windows/win-x86/publish/Abdal-Net-Fixer.exe
-
-
-jobs:
-  deploy:
-    runs-on: windows-latest
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      jobs:
+  build:
+ 
+    runs-on: ubuntu-latest
+ 
     steps:
-      - name: Initialize Actions
-        uses: actions/checkout@v2
-
-      - name: Initialize .Net
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 5.0.x
-
-      - name: Restore Project
-        run: dotnet restore ${{ env.PROJECT_PATH }}
-
-      - name: Publish Project
-        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release --self-contained -r win-x86 --no-restore
-
-      - name: Create Zip File
-        uses: papeloto/action-zip@v1
-        with:
-          files: ${{ env.EXE_PATH }}
-          dest: ${{ env.ZIP_PATH }}
-
-      - name: Initialize Release
-        uses: actions/create-release@v1
-        id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-
-      - name: Create Release
-        uses: csexton/release-asset-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.ZIP_PATH }}
-          release-url: ${{ steps.create_release.outputs.upload_url }}
+    - uses: actions/checkout@v2
+ 
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: 4.0.x
+ 
+    - name: Restore
+      run: dotnet restore
+ 
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+ 
+    - name: Test
+      run: dotnet test --no-restore
